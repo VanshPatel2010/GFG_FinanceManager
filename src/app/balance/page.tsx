@@ -1,122 +1,178 @@
-"use client";
+'use client'
 
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-
-// Register the components
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+import React, { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { Bar } from 'react-chartjs-2'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { signIn } from 'next-auth/react'
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 interface Transaction {
-  date?: string;
-  amount: number;
-  type: 'income' | 'expense';
+  _id: string
+  date: string
+  amount: number
+  type: 'income' | 'expense'
+  description: string
 }
 
-const BalanceTracker: React.FC = () => {
-  const [currentBalance, setCurrentBalance] = useState<number>(0);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [amount, setAmount] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
-  const [type, setType] = useState<'income' | 'expense'>('income');  // Ensure type is correctly typed as 'income' or 'expense'
-  const [loading, setLoading] = useState<boolean>(true);  // Loading state
+export default function BalanceTracker() {
+  const { data: session, status } = useSession()
+  const [currentBalance, setCurrentBalance] = useState<number>(0)
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [amount, setAmount] = useState<string>('')
+  const [description, setDescription] = useState<string>('')
+  const [type, setType] = useState<'income' | 'expense'>('income')
+  const [loading, setLoading] = useState<boolean>(true)
+  
 
   useEffect(() => {
-    fetchBalances();
-  }, []);
+    if (status === 'authenticated' && session?.user?.id) {
+      fetchBalances()
+    }
+  }, [status,session])
 
   const fetchBalances = async () => {
-    setLoading(true);  // Set loading state to true when fetching data
     try {
-      const balanceResponse = await axios.get('/api/balanceTracker');
-      const currentBalanceResponse = await axios.get('/api/balanceTracker/current');
-
-      setTransactions(balanceResponse.data.data);
-      setCurrentBalance(currentBalanceResponse.data.balance);
-      setLoading(false);  // Set loading state to false after data is fetched
+      setLoading(true);
+      
+      const balanceResponse = await fetch('/api/balanceTracker');
+      const currentBalanceResponse = await fetch('/api/balanceTracker/current');
+  
+      if (!balanceResponse.ok || !currentBalanceResponse.ok) {
+        throw new Error('Failed to fetch balances');
+      }
+  
+      const balanceData = await balanceResponse.json();
+      const currentBalanceData = await currentBalanceResponse.json();
+  
+      setTransactions(balanceData.data || []);
+      setCurrentBalance(currentBalanceData.balance || 0);
     } catch (error) {
       console.error('Error fetching balances:', error);
-      setLoading(false);  // Set loading state to false in case of an error
+      // Optionally reset state if errors occur
+      setTransactions([]);
+      setCurrentBalance(0);
+    } finally {
+      setLoading(false);
     }
   };
+  
 
   const handleTypeChange = (selectedType: 'income' | 'expense') => {
-    setType(selectedType);
-  };
+    setType(selectedType)
+  }
 
   const handleSubmit = async () => {
     try {
-      await axios.post('/api/balanceTracker', {
-        type,
-        amount: parseFloat(amount),
-        date: new Date(),
-      });
-      fetchBalances();  // Refresh the balances
-      setAmount('');
-      setDescription('');
+      await fetch('/api/balanceTracker', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type,
+          amount: parseFloat(amount),
+          description,
+          date: new Date().toISOString(),
+        }),
+      })
+      fetchBalances()
+      setAmount('')
+      setDescription('')
     } catch (error) {
-      console.error('Error adding balance:', error);
-      // Optionally, you can set an error state here to display an error message
+      console.error('Error adding balance:', error)
     }
-  };
+  }
 
   const chartData = {
-    labels: transactions.map((t) => t.date ? new Date(t.date).toLocaleString() : ''),
+    labels: transactions.map((t) => new Date(t.date).toLocaleString()),
     datasets: [
       {
         label: 'Transaction Amounts',
         data: transactions.map((t) => t.amount),
         backgroundColor: transactions.map((t) =>
-          t.type === 'income' ? 'green' : 'red'
+          t.type === 'income' ? 'rgba(75, 192, 192, 0.6)' : 'rgba(255, 99, 132, 0.6)'
         ),
       },
     ],
-  };
+  }
+
+  if (status === 'unauthenticated') {
+    console.log(session)
+    return (<div>Please sign in to access the Balance Tracker.
+       <Button onClick={() => signIn()}>Sign In</Button>
+    </div>
+                     )
+  }
 
   if (loading) {
-    return <p>Loading...</p>;  // Display loading message while fetching data
+    return <p>Loading...</p>
   }
 
   return (
-    <div style={{ padding: '20px', backgroundColor: '#000', color: '#fff' }}>
-      <h1>Welcome, kuldeep</h1>
-      <h2>Current Balance: ₹{currentBalance.toFixed(2)}</h2>
-      <div>
-        <input
-          type="number"
-          placeholder="Amount"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-        />
-        <textarea
-          placeholder="Description (optional)"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        <button style={{ backgroundColor: 'green' }} onClick={() => handleTypeChange('income')}>
-          Add Gain
-        </button>
-        <button style={{ backgroundColor: 'red' }} onClick={() => handleTypeChange('expense')}>
-          Add Spend
-        </button>
-        <button onClick={handleSubmit}>Submit</button>
-      </div>
-      <div>
-        <h3>Transaction History:</h3>
-        {transactions.map((t, index) => (
-          <p key={index}>
-            {t.date ? new Date(t.date).toLocaleString() : 'Unknown Date'} - {t.type === 'income' ? 'gain' : 'loss'} of ₹
-            {t.amount}
-          </p>
-        ))}
-      </div>
-      <div>
-        <h3>Transaction Chart:</h3>
-        <Bar data={chartData} />
-      </div>
+    <div className="container mx-auto p-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Balance Tracker</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <h2 className="text-2xl font-bold mb-4">Current Balance: ₹{currentBalance.toFixed(2)}</h2>
+          <div className="space-y-4">
+            <Input
+              type="number"
+              placeholder="Amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+            <textarea
+              className="w-full p-2 border rounded"
+              placeholder="Description (optional)"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+            <div className="space-x-2">
+              <Button
+                variant={type === 'income' ? 'default' : 'outline'}
+                onClick={() => handleTypeChange('income')}
+              >
+                Add Gain
+              </Button>
+              <Button
+                variant={type === 'expense' ? 'default' : 'outline'}
+                onClick={() => handleTypeChange('expense')}
+              >
+                Add Spend
+              </Button>
+            </div>
+            <Button onClick={handleSubmit}>Submit</Button>
+          </div>
+          <div className="mt-8">
+            <h3 className="text-xl font-semibold mb-2">Transaction History:</h3>
+            {transactions.map((t) => (
+              <p key={t._id}>
+                {new Date(t.date).toLocaleString()} - {t.type === 'income' ? 'gain' : 'loss'} of ₹
+                {t.amount} - {t.description}
+              </p>
+            ))}
+          </div>
+          <div className="mt-8">
+            <h3 className="text-xl font-semibold mb-2">Transaction Chart:</h3>
+            <Bar data={chartData} />
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  );
-};
+  )
+}
 
-export default BalanceTracker;

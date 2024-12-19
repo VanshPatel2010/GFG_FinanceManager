@@ -24,6 +24,18 @@ export default function Home() {
           </Card>
           <Card>
             <CardHeader>
+              <CardTitle>Balance Tracker</CardTitle>
+              <CardDescription>Manage your personal finances</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-4">Track your expenses, set budgets, and achieve your financial goals.</p>
+              <Link href="/balance">
+                <Button>Go to Balance</Button>
+              </Link>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
               <CardTitle>Financial Resources</CardTitle>
               <CardDescription>Learn about personal finance</CardDescription>
             </CardHeader>

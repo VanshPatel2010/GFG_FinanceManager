@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Budget, Category, Expense } from '@/types/budget'
 import { NavBar } from '../components/NavBar'
 import Budget from '@/models/Budget'
+import { signIn } from 'next-auth/react'
 
 export default function BudgetTracker() {
   const { data: session, status } = useSession()
@@ -97,22 +98,27 @@ export default function BudgetTracker() {
             ]
           }
         }
+        
         return category
       })
     }
     setBudget(updatedBudget)
     setNewExpense({ categoryIndex: 0, description: '', amount: 0 })
-    createOrUpdateBudget()
+    createOrUpdateBudget(updatedBudget)
   }
 
-  if (status === 'loading' || loading) {
-    return <div>Loading...</div>
-  }
+  // if (status === 'loading' || loading) {
+  //   return <div>Loading...</div>
+  // }
 
   if (status === 'unauthenticated') {
-    return <div>Please sign in to access the Budget Tracker.</div>
+    console.log(session)
+    return (<div>Please sign in to access the Budget Tracker.
+       <Button onClick={() => signIn()}>Sign In</Button>
+    </div>
+                     )
   }
-
+  
   return (
     <>
       <NavBar />
