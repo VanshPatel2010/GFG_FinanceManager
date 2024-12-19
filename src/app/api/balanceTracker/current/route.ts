@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import {connect } from '@/app/utils/db';
+import {connect } from '@/app/lib/mongodb';
 import Balance from '@/app/models/balanceTracker';
 connect(); // Ensure database is connected
 

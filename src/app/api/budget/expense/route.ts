@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import {Category, Expense, Budget} from '@/app/models/budgetTracker'; // Assuming the Category schema is defined in models/Category
-import {connect} from '@/app/utils/db';
+import {Category, Expense, Budget} from '@/app/models/Budget'; // Assuming the Category schema is defined in models/Category
+import {connect} from '@/app/lib/mongodb';
 
 // Connect to database
 connect();

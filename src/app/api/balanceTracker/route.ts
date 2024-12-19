@@ -49,8 +49,8 @@
 //   }
 // }
 import { NextResponse } from 'next/server';
-import {connect } from '@/app/utils/db'; // Replace with your database connection logic
-import Balance from '@/app/models/balanceTracker';
+import {connect } from '@/lib/mongodb'; // Replace with your database connection logic
+import Balance from '@/models/balanceTracker';
 connect(); // Ensure database is connected
 
 // Fetch all transactions
