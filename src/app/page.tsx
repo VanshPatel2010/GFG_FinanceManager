@@ -1,4 +1,4 @@
-import  {NavBar}  from '@/components/Navbar'
+import { NavBar } from '@/components/Navbar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
@@ -31,6 +31,18 @@ export default function Home() {
               <p className="mb-4">Track your expenses, set budgets, and achieve your financial goals.</p>
               <Link href="/balance">
                 <Button>Go to Balance</Button>
+              </Link>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Splitwise</CardTitle>
+              <CardDescription>Split expenses with friends</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-4">Easily split bills, track shared expenses, and settle up with friends.</p>
+              <Link href="/splitwise">
+                <Button>Go to Splitwise</Button>
               </Link>
             </CardContent>
           </Card>

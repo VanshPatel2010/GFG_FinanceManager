@@ -18,6 +18,7 @@ export function NavBar() {
             <>
               <span>Signed in as {session.user?.email}</span>
               <Button onClick={() => signOut()}>Sign Out</Button>
+              <span>Balance {session.user?.balance}</span>
             </>
           ) : (
             <Button onClick={() => signIn()}>Sign In</Button>

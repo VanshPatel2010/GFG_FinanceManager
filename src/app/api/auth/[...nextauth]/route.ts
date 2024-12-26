@@ -1,12 +1,25 @@
 import NextAuth, { NextAuthOptions, DefaultSession } from 'next-auth'
 import { MongoDBAdapter } from '@next-auth/mongodb-adapter'
-import GitHubProvider from "next-auth/providers/github";import clientPromise from '@/lib/mongodb'
+import GitHubProvider from "next-auth/providers/github"
+import clientPromise from '@/lib/mongodb'
 
 declare module "next-auth" {
-  interface Session extends DefaultSession {
-    user?: {
-      id: string;
-    } & DefaultSession["user"]
+  interface Session {
+    user: {
+      id: string
+      email: string
+      name: string
+      image: string
+      balance?: number // Add the balance property
+    }
+  }
+
+  interface User {
+    id: string
+    email: string
+    name: string
+    image: string
+    balance?: number // Add the balance property
   }
 }
 
@@ -23,7 +36,8 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     session: async ({ session, user }) => {
       if (session?.user) {
-        (session.user as any).id = user.id
+        session.user.id = user.id
+        session.user.balance = user.balance 
       }
       return session
     },
