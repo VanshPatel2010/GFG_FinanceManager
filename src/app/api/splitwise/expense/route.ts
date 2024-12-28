@@ -192,12 +192,95 @@
 //   }
 // }
 
+// 2nd
+// import { NextResponse } from 'next/server'
+// import { getServerSession } from 'next-auth/next'
+// import mongoose from 'mongoose'
+// import Expense from '@/models/Expense'
+// import Group from '@/models/Group'
+// import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+
+// export async function GET(request: Request) {
+//   const session = await getServerSession(authOptions)
+//   if (!session?.user?.email) {
+//     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+//   }
+
+//   const { searchParams } = new URL(request.url)
+//   const groupId = searchParams.get('groupId')
+
+//   if (!groupId) {
+//     return NextResponse.json({ error: 'Group ID is required' }, { status: 400 })
+//   }
+
+//   try {
+//     await mongoose.connect(process.env.MONGODB_URI!)
+
+//     // Check if the user is a member of the group
+//     const group = await Group.findOne({
+//       _id: groupId,
+//       members: session.user.email
+//     })
+
+//     if (!group) {
+//       return NextResponse.json({ error: 'Group not found or user is not a member' }, { status: 404 })
+//     }
+
+//     const expenses = await Expense.find({ groupId })
+//       .sort({ date: -1 })
+//       .lean()
+
+//     return NextResponse.json(expenses)
+//   } catch (error) {
+//     console.error('Error fetching expenses:', error)
+//     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+//   }
+// }
+
+// export async function POST(request: Request) {
+//   const session = await getServerSession(authOptions)
+//   if (!session?.user?.email) {
+//     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+//   }
+
+//   try {
+//     const { description, amount, paidBy, splitAmong, groupId } = await request.json()
+
+//     await mongoose.connect(process.env.MONGODB_URI!)
+
+//     // Check if the user is a member of the group
+//     const group = await Group.findOne({
+//       _id: groupId,
+//       members: session.user.email
+//     })
+
+//     if (!group) {
+//       return NextResponse.json({ error: 'Group not found or user is not a member' }, { status: 404 })
+//     }
+
+//     const expense = new Expense({
+//       description,
+//       amount,
+//       paidBy,
+//       splitAmong,
+//       groupId,
+//     })
+
+//     await expense.save()
+
+//     return NextResponse.json(expense)
+//   } catch (error) {
+//     console.error('Error creating expense:', error)
+//     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+//   }
+// }
+
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import mongoose from 'mongoose'
 import Expense from '@/models/Expense'
 import Group from '@/models/Group'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '../../auth/[...nextauth]/route'
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions)
@@ -215,7 +298,6 @@ export async function GET(request: Request) {
   try {
     await mongoose.connect(process.env.MONGODB_URI!)
 
-    // Check if the user is a member of the group
     const group = await Group.findOne({
       _id: groupId,
       members: session.user.email
@@ -243,11 +325,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { description, amount, paidBy, splitAmong, groupId } = await request.json()
+    const { description, amount, paidBy, splitType, splits, groupId } = await request.json()
 
     await mongoose.connect(process.env.MONGODB_URI!)
 
-    // Check if the user is a member of the group
     const group = await Group.findOne({
       _id: groupId,
       members: session.user.email
@@ -261,7 +342,8 @@ export async function POST(request: Request) {
       description,
       amount,
       paidBy,
-      splitAmong,
+      splitType,
+      splits,
       groupId,
     })
 
@@ -273,3 +355,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
+
