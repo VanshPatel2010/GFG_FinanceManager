@@ -76,17 +76,6 @@
 //     }
 //   }
 
-/*************  ✨ Codeium Command ⭐  *************/
-  /**
-   * Handles adding a new member to the group.
-   *
-   * If the input is empty, the function does nothing.
-   *
-   * Otherwise, it sends a POST request to the API to add the new member.
-   * If the request fails, it sets the error state to the error message.
-   * If the request succeeds, it resets the input and fetches the group details again.
-   */
-/******  1ebdc7b5-4779-466b-a91b-661664040559  *******/
 //   const handleAddMember = async () => {
 //     if (!newMember.trim()) return
     
@@ -591,7 +580,7 @@ export default function GroupPage() {
         </div>
 
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-[#87CEEB]">Charts</h2>
+          <h2 className="text-xl font-semibold text-[#87CEEB]"></h2>
           {/* Add charts implementation here */}
         </div>
       </div>

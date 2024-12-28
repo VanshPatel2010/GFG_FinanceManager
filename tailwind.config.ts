@@ -73,5 +73,10 @@ module.exports = {
     },
   },
   plugins: [require("tailwindcss-animate")],
+  corePlugins: {
+    // ...
+    apply: true, // Enable the @apply directive
+    // ...
+  }
 }
 

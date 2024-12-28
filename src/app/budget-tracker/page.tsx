@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -7,8 +8,9 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Budget, Category, Expense } from '@/types/budget'
 import { NavBar } from '../components/NavBar'
-import Budget from '@/models/Budget'
 import { signIn } from 'next-auth/react'
+import styles from '@/styles/BudgetTracker.module.css'
+import { Trash2 } from 'lucide-react'
 
 export default function BudgetTracker() {
   const { data: session, status } = useSession()
@@ -16,6 +18,7 @@ export default function BudgetTracker() {
   const [loading, setLoading] = useState(true)
   const [newCategory, setNewCategory] = useState<Omit<Category, 'expenses'>>({ name: '', allocation: 0 })
   const [newExpense, setNewExpense] = useState<Omit<Expense, 'date'> & { categoryIndex: number }>({ categoryIndex: 0, description: '', amount: 0 })
+  const [newBudgetAmount, setNewBudgetAmount] = useState<number>(0)
 
   useEffect(() => {
     if (status === 'authenticated' && session?.user?.id) {
@@ -45,12 +48,13 @@ export default function BudgetTracker() {
     }
   }
 
+  //chart
+  
   const createOrUpdateBudget = async (updatedBudget: Budget) => {
     if (!budget) return
     try {
       setLoading(true)
       const method = budget._id ? 'PUT' : 'POST'
-      console.log(budget)
       const res = await fetch('/api/budget', {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -74,7 +78,6 @@ export default function BudgetTracker() {
       ...budget,
       categories: [...budget.categories, { ...newCategory, expenses: [] }]
     }
-    console.log(updatedBudget)
     setBudget(updatedBudget)
     setNewCategory({ name: '', allocation: 0 })
     createOrUpdateBudget(updatedBudget)
@@ -98,7 +101,6 @@ export default function BudgetTracker() {
             ]
           }
         }
-        
         return category
       })
     }
@@ -107,16 +109,34 @@ export default function BudgetTracker() {
     createOrUpdateBudget(updatedBudget)
   }
 
-  // if (status === 'loading' || loading) {
-  //   return <div>Loading...</div>
-  // }
+  const deleteCategory = (indexToDelete: number) => {
+    if (!budget) return
+    const updatedBudget: Budget = {
+      ...budget,
+      categories: budget.categories.filter((_, index) => index !== indexToDelete)
+    }
+    setBudget(updatedBudget)
+    createOrUpdateBudget(updatedBudget)
+  }
+
+  const addBudget = () => {
+    if (!budget) return
+    const updatedBudget: Budget = {
+      ...budget,
+      totalBudget: budget.totalBudget + newBudgetAmount
+    }
+    setBudget(updatedBudget)
+    setNewBudgetAmount(0)
+    createOrUpdateBudget(updatedBudget)
+  }
 
   if (status === 'unauthenticated') {
-    console.log(session)
-    return (<div>Please sign in to access the Budget Tracker.
-       <Button onClick={() => signIn()}>Sign In</Button>
-    </div>
-                     )
+    return (
+      <div>
+        Please sign in to access the Budget Tracker.
+        <Button onClick={() => signIn()}>Sign In</Button>
+      </div>
+    )
   }
   
   return (
@@ -131,15 +151,17 @@ export default function BudgetTracker() {
                 <CardTitle>Total Budget</CardTitle>
               </CardHeader>
               <CardContent>
-                <Input
-                  type="number"
-                  value={budget.totalBudget}
-                  onChange={(e) => {
-                    const updatedBudget: Budget = { ...budget, totalBudget: Number(e.target.value) }
-                    setBudget(updatedBudget)
-                  }}
-                  onBlur={createOrUpdateBudget}
-                />
+                <p className="text-xl font-semibold mb-2">Current Budget: ${budget.totalBudget}</p>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    value={newBudgetAmount}
+                    onChange={(e) => setNewBudgetAmount(Number(e.target.value))}
+                    placeholder="Enter amount to add"
+                    className="flex-grow"
+                  />
+                  <Button onClick={addBudget}>Add to Budget</Button>
+                </div>
               </CardContent>
             </Card>
 
@@ -200,8 +222,16 @@ export default function BudgetTracker() {
 
             {budget.categories.map((category, index) => (
               <Card key={index} className="mt-4">
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>{category.name}</CardTitle>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => deleteCategory(index)}
+                    className="h-8 w-8"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <p>Allocation: ${category.allocation}</p>
